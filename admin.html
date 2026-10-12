@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhog Distribution - Admin</title>
+    <link rel="icon" type="image/png" href="agomoni_small_logo.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6fa;
+            min-height: 100vh;
+        }
+
+        /* Login screen */
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+
+        .login-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .login-card h1 { font-size: 20px; margin-bottom: 8px; color: #1a1a2e; }
+        .login-card p { font-size: 14px; color: #666; margin-bottom: 20px; }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        .login-card input:focus { border-color: #3498db; }
+
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .login-error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* Admin panel */
+        .admin-panel { display: none; }
+
+        .admin-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-header h1 { font-size: 18px; }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            overflow-x: auto;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 18px;
+            min-width: 120px;
+            flex: 1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .stat-card.green .stat-value { color: #27ae60; }
+        .stat-card.blue .stat-value { color: #3498db; }
+        .stat-card.orange .stat-value { color: #f39c12; }
+
+        /* Tab navigation */
+        .tabs {
+            display: flex;
+            padding: 0 20px;
+            gap: 0;
+            border-bottom: 2px solid #e0e0e0;
+            background: #fff;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #999;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        /* Tab content */
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+
+        /* Scanner tab */
+        .scanner-area {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        #qr-reader {
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .btn-scan {
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .btn-scan.scanning {
+            background: #e74c3c;
+        }
+
+        .scan-result {
+            display: none;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-top: 16px;
+        }
+
+        .scan-result.show { display: block; }
+
+        .scan-result .result-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .scan-result .result-details {
+            text-align: left;
+            line-height: 1.8;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .scan-result .result-details span { font-weight: 600; }
+
+        .btn-redeem {
+            width: 100%;
+            padding: 14px;
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-redeem:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-valid { border-left: 4px solid #27ae60; }
+        .result-redeemed { border-left: 4px solid #e74c3c; }
+        .result-notfound { border-left: 4px solid #f39c12; }
+
+        /* Search tab */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .search-box input:focus { border-color: #3498db; }
+
+        .search-box button {
+            padding: 12px 20px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .search-result-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .search-result-item .info { flex: 1; min-width: 140px; }
+        .search-result-item .info .name { font-weight: 600; font-size: 15px; }
+        .search-result-item .info .meta { font-size: 13px; color: #666; margin-top: 2px; }
+        .search-result-item .code {
+            font-weight: 700;
+            font-size: 14px;
+            color: #667eea;
+            margin-left: 12px;
+        }
+
+        .search-result-item .actions { margin-left: 12px; }
+
+        .btn-small-redeem {
+            padding: 8px 16px;
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-small-redeem.redeemed {
+            background: #ccc;
+            cursor: default;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 14px;
+        }
+
+        /* Date filter */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .filter-bar select {
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            flex: 1;
+        }
+
+        .filter-bar .btn-refresh {
+            padding: 10px 16px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Manual entry */
+        .manual-entry {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .manual-entry input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            outline: none;
+        }
+
+        .manual-entry button {
+            padding: 12px 20px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Date toggle rows */
+        .date-toggle-row {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .date-toggle-row .date-info {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .date-toggle-row .date-info .date-day {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .date-toggle-row .date-info .date-full {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .date-toggle-row .date-info .date-past {
+            font-size: 11px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .date-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .token-limit-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .token-limit-group label {
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .token-limit-group input {
+            width: 70px;
+            padding: 6px 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            outline: none;
+        }
+
+        .token-limit-group input:focus {
+            border-color: #3498db;
+        }
+
+        .issued-count {
+            font-size: 13px;
+            color: #555;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-full {
+            background: #e74c3c;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            border-radius: 28px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #27ae60;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        .toggle-switch input:disabled + .toggle-slider {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .toggle-status {
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 55px;
+            text-align: right;
+        }
+
+        .toggle-status.open { color: #27ae60; }
+        .toggle-status.closed { color: #e74c3c; }
+        .toggle-status.past { color: #999; }
+
+        /* ============================
+           Walk-in Tab
+           ============================ */
+        .walkin-area {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .walkin-area h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .walkin-area .walkin-subtitle {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .walkin-date-label {
+            background: #eaf4fe;
+            color: #2c3e50;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .walkin-form .form-group {
+            margin-bottom: 16px;
+        }
+
+        .walkin-form .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .walkin-form .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .walkin-form .form-group input:focus {
+            border-color: #3498db;
+        }
+
+        .btn-walkin-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-walkin-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-walkin-submit:hover:not(:disabled) {
+            opacity: 0.92;
+        }
+
+        .walkin-success {
+            display: none;
+            background: #d4edda;
+            border: 2px solid #27ae60;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 16px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .walkin-success.show {
+            display: block;
+        }
+
+        .walkin-success .success-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .walkin-success .success-code {
+            font-size: 24px;
+            font-weight: 700;
+            color: #155724;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .walkin-success .success-msg {
+            font-size: 14px;
+            color: #155724;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================
+           Summary Tab
+           ============================ */
+        .summary-section {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .summary-section h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-top: 4px solid #ccc;
+        }
+
+        .summary-card .sc-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .summary-card .sc-label {
+            font-size: 12px;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card.sc-blue   { border-top-color: #3498db; }
+        .summary-card.sc-blue   .sc-value { color: #3498db; }
+        .summary-card.sc-purple { border-top-color: #8e44ad; }
+        .summary-card.sc-purple .sc-value { color: #8e44ad; }
+        .summary-card.sc-teal   { border-top-color: #16a085; }
+        .summary-card.sc-teal   .sc-value { color: #16a085; }
+        .summary-card.sc-green  { border-top-color: #27ae60; }
+        .summary-card.sc-green  .sc-value { color: #27ae60; }
+        .summary-card.sc-orange { border-top-color: #f39c12; }
+        .summary-card.sc-orange .sc-value { color: #f39c12; }
+        .summary-card.sc-red    { border-top-color: #e74c3c; }
+        .summary-card.sc-red    .sc-value { color: #e74c3c; }
+
+        .summary-table-wrap {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .summary-table th {
+            background: #2c3e50;
+            color: #fff;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .summary-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+
+        .summary-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-table tr.totals-row {
+            background: #f8f9fa;
+            font-weight: 700;
+        }
+
+        .summary-table tr.totals-row td {
+            border-top: 2px solid #2c3e50;
+        }
+
+        .btn-print {
+            padding: 12px 24px;
+            background: #2c3e50;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-print:hover { opacity: 0.9; }
+
+        .summary-loading {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 14px;
+        }
+
+        /* ============================
+           Print styles
+           ============================ */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .summary-section, .summary-section * {
+                visibility: visible;
+            }
+            .summary-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .btn-print {
+                display: none !important;
+            }
+            .admin-header, .stats-bar, .filter-bar, .tabs,
+            .login-screen, .btn-logout {
+                display: none !important;
+            }
+        }
+
+        /* ============================
+           Responsive
+           ============================ */
+        @media (max-width: 600px) {
+            .tabs { padding: 0 8px; }
+            .tab-btn { padding: 10px 10px; font-size: 12px; }
+            .summary-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Members tab */
+        .members-header {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .members-header .members-count {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e65100;
+            margin-bottom: 4px;
+        }
+
+        .members-header .members-subtitle {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .member-row {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .member-row .member-info {
+            flex: 1;
+        }
+
+        .member-row .member-info .member-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .member-row .member-info .member-meta {
+            font-size: 13px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .member-row .member-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .member-row .coupon-badge {
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .btn-call {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 14px;
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-call:hover { opacity: 0.9; }
+
+        /* ---- Members v2 ---- */
+        .mfilters { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 10px; }
+        .mchip { padding:6px 12px; border-radius:16px; border:1.5px solid #dcdfe6; background:#fff;
+                 font-size:12px; font-weight:600; color:#555; cursor:pointer; }
+        .mchip.active { background:#667eea; border-color:#667eea; color:#fff; }
+        .msearch { width:100%; padding:10px 12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; outline:none; margin-bottom:4px; }
+        .msearch:focus { border-color:#667eea; }
+        .member-card { background:#fff; border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+        .member-card .mc-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .member-card .member-info { flex:1; min-width:0; }
+        .member-card .member-name { font-weight:700; font-size:15px; color:#2c3e50; }
+        .member-card .member-meta { font-size:13px; color:#888; margin-top:2px; word-break:break-word; }
+        .member-card .member-actions { display:flex; gap:6px; flex-shrink:0; }
+        .mc-status { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+        .st-not_registered { background:#fdecea; color:#c0392b; }
+        .st-registered { background:#fff4e0; color:#e65100; }
+        .st-redeemed { background:#d4edda; color:#155724; }
+        .btn-call.icon { padding:8px 11px; font-size:16px; }
+        .btn-wa { display:inline-flex; align-items:center; gap:4px; padding:8px 12px; background:#25D366; color:#fff;
+                  border-radius:8px; font-size:13px; font-weight:600; text-decoration:none; }
+        .mc-remark-saved { margin-top:8px; padding:6px 10px; background:#f0f4ff; border-left:3px solid #667eea; border-radius:6px; font-size:13px; color:#333; }
+        .mc-remark-saved small { color:#999; margin-left:6px; }
+        .mc-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .mc-chips button { padding:4px 10px; border-radius:14px; border:1px solid #dcdfe6; background:#fafafa; font-size:12px; cursor:pointer; }
+        .mc-remark-edit { display:flex; gap:6px; margin-top:8px; }
+        .mc-remark-edit input { flex:1; padding:8px 10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:13px; outline:none; min-width:0; }
+        .mc-remark-edit input:focus { border-color:#667eea; }
+        .mc-remark-edit button { padding:8px 14px; background:#667eea; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+        .mc-remark-edit button:disabled { opacity:.6; }
+        /* Walk-in recent list */
+        .walkin-recent { margin-top:16px; }
+        .walkin-recent h3 { font-size:13px; color:#888; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+        .walkin-recent .wr-item, #recentLookupsList .wr-item { display:flex; justify-content:space-between; gap:8px; padding:8px 10px; background:#fff; border-radius:8px; margin-bottom:6px; font-size:13px; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+        .walkin-recent .wr-code, #recentLookupsList .wr-code { font-weight:700; letter-spacing:1px; color:#1a1a2e; }
+        .scope-note { font-size:12px; color:#888; margin:0 0 10px; }
+        .retry-btn { margin-top:10px; padding:8px 16px; background:#667eea; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+        /* Today's coupon quota badge (next to Walk-in) */
+        .quota-pill { font-size:13px; font-weight:600; padding:3px 10px; border-radius:14px; background:#e8f5e9; color:#2e7d32; white-space:nowrap; }
+        .quota-pill.low  { background:#fff3e0; color:#e65100; }
+        .quota-pill.over { background:#ffebee; color:#c62828; font-weight:800; }
+        .quota-pill.none { background:#f0f0f0; color:#777; font-weight:500; }
+
+        /* Entry cards (Search + All Entries): name / details / icon row */
+        .search-result-item.entry-card { display:block; }
+        .entry-card .name { font-weight:600; font-size:15px; }
+        .entry-card .meta { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-top:2px; }
+        .entry-card .meta .mleft { flex:1 1 auto; min-width:0; font-size:11.5px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left; }
+        .entry-card .meta .ccode { flex:0 0 auto; font-size:13px; font-weight:700; color:#667eea; white-space:nowrap; text-align:right; }
+        .ico-row { display:flex; align-items:center; flex-wrap:nowrap; gap:8px; margin-top:8px; }
+        .ico-btn { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; width:30px; height:30px;
+                   border-radius:50%; font-size:14px; text-decoration:none; cursor:pointer; border:none;
+                   background:#eef2ff; color:#333; -webkit-tap-highlight-color:transparent; }
+        .ico-btn.call { background:#3498db; color:#fff; }
+        .ico-btn.wa { background:#25D366; }
+        .ico-btn.wa svg { width:17px; height:17px; fill:#fff; }
+        .ico-row .btn-small-redeem { margin-left:auto; padding:8px 14px; white-space:nowrap; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-card">
+        <h1>🔐 Admin Access</h1>
+        <p>Enter the 4-digit PIN to continue</p>
+        <input type="password" id="pinInput" maxlength="4" placeholder="• • • •" inputmode="numeric"
+               onkeypress="if(event.key==='Enter') loginAdmin()">
+        <button onclick="loginAdmin()">Enter</button>
+        <p class="login-error" id="loginError">Incorrect PIN. Try again.</p>
+    </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="adminPanel">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1 id="adminTitle">🍽️ Bhog Distribution Admin</h1>
+        <button class="btn-logout" onclick="logoutAdmin()">Logout</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-card blue">
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Registered</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value" id="statRedeemed">0</div>
+            <div class="stat-label">Redeemed</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-value" id="statPending">0</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+
+    <!-- Date filter -->
+    <div class="filter-bar" style="padding: 0 20px;">
+        <select id="dateFilter" onchange="refreshData()">
+            <option value="all">All Dates</option>
+        </select>
+        <button class="btn-refresh" onclick="refreshData()">🔄 Refresh</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="scanner" onclick="switchTab('scanner', this)">📷 Scanner</button>
+        <button class="tab-btn" data-tab="search" onclick="switchTab('search', this)">🔍 Search</button>
+        <button class="tab-btn" data-tab="list" onclick="switchTab('list', this)">📋 All Entries</button>
+        <button class="tab-btn" data-tab="dates" onclick="switchTab('dates', this)">📅 Dates</button>
+        <button class="tab-btn" data-tab="summary" onclick="switchTab('summary', this)">📊 Summary</button>
+        <button class="tab-btn" data-tab="members" onclick="switchTab('members', this)">👥 Members</button>
+    </div>
+
+    <!-- SCANNER TAB -->
+    <div class="tab-content active" id="tab-scanner">
+        <div class="scanner-area">
+            <div id="qr-reader"></div>
+            <button class="btn-scan" id="scanBtn" onclick="toggleScanner()">📷 Start Scanner</button>
+
+            <p style="color:#999; font-size:13px; margin: 8px 0 16px;">— or enter code manually —</p>
+
+            <div class="manual-entry">
+                <input type="text" id="manualCode" maxlength="9"
+                       onkeypress="if(event.key==='Enter') lookupManual()"
+                       style="text-transform:uppercase; letter-spacing:2px;">
+                <button onclick="lookupManual()">Verify</button>
+            </div>
+
+            <p style="color:#999; font-size:13px; margin: 16px 0 8px;">— or search by phone (today only) — edit the number to search again —</p>
+
+            <div class="manual-entry">
+                <input type="tel" id="scannerSearchInput" placeholder="Enter 10-digit phone number"
+                       inputmode="numeric" maxlength="10"
+                       style="text-transform:none; letter-spacing:normal;"
+                       oninput="scannerSearchOnInput(this.value)"
+                       onkeypress="if(event.key==='Enter') scannerSearch()">
+                <button onclick="scannerSearch()">Search</button>
+                <button onclick="clearScannerSearch()" title="Clear" style="background:#95a5a6;">✕</button>
+            </div>
+
+            <!-- ONE result area for scan / manual code / phone search (same card design for all) -->
+            <div id="scanResult" style="text-align:left;"></div>
+
+
+            <!-- WALK-IN (always visible, under the search) -->
+            <div class="walkin-area" id="walkinCard" style="text-align:left; margin-top:22px; padding-top:16px; border-top:2px dashed #ddd;">
+                <h2 style="display:flex; align-items:center; flex-wrap:wrap; gap:10px;">➕ Walk-in <span id="quotaPill" class="quota-pill">🎟️ …</span></h2>
+                <p class="walkin-subtitle">Not registered? Enter the phone &amp; coupons — registers and redeems in one tap</p>
+                <div class="walkin-date-label" id="walkinDateLabel">📅 Loading...</div>
+
+                <form class="walkin-form" id="walkinForm" onsubmit="submitWalkin(event)">
+                    <div class="form-group">
+                        <label for="walkinName">Name</label>
+                        <input type="text" id="walkinName" placeholder="Enter name (blank = Walk-in)" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="walkinPhone">Phone Number *</label>
+                        <input type="tel" id="walkinPhone" placeholder="10-digit phone number"
+                               required pattern="[0-9]{10}" maxlength="10" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="walkinPlates">Number of Coupons (max <span id="walkinMaxPlates">20</span>)</label>
+                        <input type="number" id="walkinPlates" min="1" max="20" value="1"
+                               required inputmode="numeric" autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn-walkin-submit" id="walkinSubmitBtn">
+                        Register &amp; Redeem
+                    </button>
+                </form>
+
+                <div class="walkin-success" id="walkinSuccess">
+                    <div class="success-icon">✅</div>
+                    <div class="success-code" id="walkinSuccessCode">—</div>
+                    <div class="success-msg" id="walkinSuccessMsg">Registered &amp; Redeemed successfully</div>
+                </div>
+
+                <div class="walkin-recent" id="walkinRecent" style="display:none;">
+                    <h3>Recently added (this session)</h3>
+                    <div id="walkinRecentList"></div>
+                </div>
+            </div>
+
+            <!-- Previous scans/searches this session — kept visible so a new
+                 lookup never erases what you just saw -->
+            <div id="recentLookupsWrap" style="display:none; margin-top:14px; text-align:left;">
+                <div style="font-size:12px; color:#999; font-weight:600; margin-bottom:4px;">Previous lookups</div>
+                <div id="recentLookupsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH TAB -->
+    <div class="tab-content" id="tab-search">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search by name, phone, or code..."
+                   onkeypress="if(event.key==='Enter') searchEntries()">
+            <button onclick="searchEntries()">Search</button>
+        </div>
+        <div class="scope-note" id="searchScope"></div>
+        <div id="searchResults">
+            <div class="no-results">Search by name, phone number, or coupon code</div>
+        </div>
+    </div>
+
+    <!-- ALL ENTRIES TAB -->
+    <div class="tab-content" id="tab-list">
+        <div id="allEntries">
+            <div class="no-results">Loading entries...</div>
+        </div>
+    </div>
+
+    <!-- DATES MANAGEMENT TAB -->
+    <div class="tab-content" id="tab-dates">
+        <p style="font-size:14px; color:#555; margin-bottom:14px;">
+            Toggle dates to enable or disable registration. Set max coupons per date (0 = unlimited). Past dates are auto-disabled.
+        </p>
+        <div id="dateToggles">
+            <div class="no-results">Loading date settings...</div>
+        </div>
+    </div>
+
+    <!-- SUMMARY TAB -->
+    <div class="tab-content" id="tab-summary">
+        <div class="summary-section" id="summarySection">
+            <h2>📊 Dashboard Summary</h2>
+
+            <div id="summaryContent">
+                <div class="summary-loading">Loading summary data...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEMBERS TAB -->
+    <div class="tab-content" id="tab-members">
+        <h2 style="font-size:18px; color:#2c3e50; margin-bottom:8px;">👥 Members</h2>
+        <div class="members-header" id="membersHeader">
+            <p style="color:#666; font-size:14px;">Loading member data...</p>
+        </div>
+        <input type="search" class="msearch" id="membersSearch" placeholder="Search member by name or phone..." oninput="onMembersSearch(this.value)">
+        <div class="mfilters" id="membersFilters"></div>
+        <div style="text-align:right; margin-bottom:8px;">
+            <button onclick="loadMembersStatus()" style="padding:6px 14px; background:#667eea; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">🔄 Refresh</button>
+        </div>
+        <div class="members-list" id="membersList"></div>
+    </div>
+</div>
+
+<!-- QR Scanner Library -->
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<!-- Shared config -->
+<script src="config.js"></script>
+
+<script>
+    // ============================================================
+    // JSONP helper (avoids CORS issues with Google Apps Script)
+    // ============================================================
+    var jsonpCounter = 0;
+
+    function jsonpRequest(params, onSuccess, onError, timeoutMs) {
+        var callbackName = 'jsonpCb_' + (++jsonpCounter) + '_' + Date.now();
+        params.callback = callbackName;
+
+        var url = CONFIG.APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+        var script = document.createElement('script');
+        script.src = url;
+
+        var timeout = setTimeout(function() {
+            cleanup();
+            if (onError) onError(new Error('Request timed out'));
+        }, timeoutMs || 30000);
+
+        function cleanup() {
+            clearTimeout(timeout);
+            if (script.parentNode) script.parentNode.removeChild(script);
+            delete window[callbackName];
+        }
+
+        window[callbackName] = function(result) {
+            cleanup();
+            if (onSuccess) onSuccess(result);
+        };
+
+        script.onerror = function() {
+            cleanup();
+            if (onError) onError(new Error('Network error'));
+        };
+
+        document.body.appendChild(script);
+    }
+
+    // ============================================================
+    // Reconcile helpers — a JSONP request is a <script src> tag with a
+    // client-side setTimeout as the only "did it fail" signal. If Apps
+    // Script is just slow (lock contention, cold start, several admins
+    // hitting it at once) the write can still land on the sheet AFTER our
+    // timeout fires. Before showing "Connection error" for a redeem/walk-in,
+    // double-check with a cheap read so we don't alarm the admin over a
+    // write that actually succeeded.
+    // ============================================================
+    function reconcileRedeem(code, date, cb) {
+        jsonpRequest(
+            { action: 'lookup', code: code, date: date || getTodayStr() },
+            function(result) { cb(!!(result && result.status === 'found' && result.redeemed)); },
+            function() { cb(false); },
+            15000
+        );
+    }
+
+    function reconcileWalkin(phone, cb) {
+        jsonpRequest(
+            { action: 'quickSearch', query: phone.replace(/\D/g, ''), date: getTodayStr(), includeRedeemed: 'true' },
+            function(result) {
+                var entry = null;
+                if (result && result.status === 'success' && (result.data || []).length) {
+                    entry = result.data.filter(function(d) { return phoneKey(d.phone) === phoneKey(phone); })[0] || null;
+                }
+                cb(entry);
+            },
+            function() { cb(null); },
+            15000
+        );
+    }
+
+    // ============================================================
+    // Recent lookups — keeps the previous scan/search result visible
+    // (session-only) instead of it being wiped the instant a new scan,
+    // manual code, or phone search is made.
+    // ============================================================
+    var recentLookups = [];
+    var LOOKUP_KEY = 'agomoni_recent_lookups';
+
+    function loadRecentLookups() {
+        try { recentLookups = JSON.parse(sessionStorage.getItem(LOOKUP_KEY) || '[]'); } catch (e) { recentLookups = []; }
+        renderRecentLookups();
+    }
+    function saveRecentLookups() {
+        try { sessionStorage.setItem(LOOKUP_KEY, JSON.stringify(recentLookups)); } catch (e) { /* fine */ }
+    }
+    function logRecentLookup(entry) {
+        entry.ts = Date.now();
+        recentLookups.unshift(entry);
+        recentLookups = recentLookups.slice(0, 6);
+        saveRecentLookups();
+        renderRecentLookups();
+    }
+    function renderRecentLookups() {
+        var wrap = document.getElementById('recentLookupsWrap');
+        var list = document.getElementById('recentLookupsList');
+        if (!wrap || !list) return;
+        wrap.style.display = recentLookups.length ? 'block' : 'none';
+        list.innerHTML = recentLookups.map(function(r) {
+            var badge = r.redeemed ? '✅ Redeemed' : (r.found === false ? '❌ Not found' : '🟢 Valid');
+            return '<div class="wr-item"><span>' + escHtml(r.label) + '</span><span class="wr-code">' + badge + '</span></div>';
+        }).join('');
+    }
+
+    // ============================================================
+    // Data cache & state
+    // ============================================================
+    var allData = [];
+    var currentScanCode = null;
+    var currentScanDate = null;
+    var dataLoaded = false;
+    var refreshSeq = 0;
+    var summaryCache = {};
+    var html5QrCode = null;
+    var isScanning = false;
+
+    // Scanner-tab local cache — today's tab only, kept in memory so phone
+    // search is instant (client-side filter) instead of a live round trip
+    // to Apps Script on every search, same trick the Search tab already
+    // uses via allData.
+    var scannerData = [];
+    var scannerDataLoaded = false;
+    var scannerDataDate = null;
+    var scannerCacheTimer = null;
+
+    function loadScannerCache() {
+        var d = getTodayStr();
+        scannerDataDate = d;
+        jsonpRequest(
+            { action: 'list', date: d },
+            function(result) {
+                if (result && result.status === 'success') {
+                    scannerData = result.data || [];
+                    scannerDataLoaded = true;
+                    updateQuotaPill();
+                    // If the admin already typed a full number while we were loading,
+                    // re-run the search now that it can resolve instantly.
+                    var input = document.getElementById('scannerSearchInput');
+                    if (input && input.value.replace(/\D/g, '').length === 10) scannerSearch();
+                }
+            },
+            function() { /* silent — scannerSearch() falls back to a live search */ },
+            20000
+        );
+    }
+
+    function startScannerCacheRefresh() {
+        loadScannerCache();
+        loadQuotaLimit();
+        quotaTick = 0;
+        if (scannerCacheTimer) clearInterval(scannerCacheTimer);
+        // Refresh in the background every 20s so redemptions/registrations
+        // made from OTHER admins' devices show up here too.
+        scannerCacheTimer = setInterval(function() {
+            loadScannerCache();
+            if (++quotaTick % 9 === 0) loadQuotaLimit();   // re-read the limit about every 3 minutes
+        }, 20000);
+    }
+
+    // ── Today's coupon quota (max set in Dates tab) ───────────────
+    // used  = plates in today's in-memory copy (online + walk-ins), updated instantly on every walk-in
+    // max   = today's limit from the backend (0 = unlimited); fetched at login and every ~3 minutes
+    // Walk-ins are NEVER blocked by the quota — the badge only warns the volunteer.
+    var todayMaxTokens = null;   // null = not loaded yet
+    var quotaTick = 0;
+
+    function loadQuotaLimit() {
+        var t = getTodayStr();
+        jsonpRequest(
+            { action: 'getDateLimit', date: t },
+            function(result) {
+                if (result && result.status === 'success') {
+                    todayMaxTokens = parseInt(result.maxTokens, 10) || 0;
+                    updateQuotaPill();
+                } else {
+                    loadQuotaLimitFallback(t);   // backend not redeployed yet -> old (heavier) action
+                }
+            },
+            function() { /* silent — badge keeps its last value */ },
+            20000
+        );
+    }
+
+    function loadQuotaLimitFallback(t) {
+        jsonpRequest(
+            { action: 'getDateSettings' },
+            function(result) {
+                if (result && result.status === 'success') {
+                    var m = 0;
+                    (result.dates || []).forEach(function(d) { if (d.date === t) m = parseInt(d.maxTokens, 10) || 0; });
+                    todayMaxTokens = m;
+                    updateQuotaPill();
+                }
+            },
+            function() {},
+            20000
+        );
+    }
+
+    function updateQuotaPill() {
+        var pill = document.getElementById('quotaPill');
+        if (!pill) return;
+        if (todayMaxTokens === null || !cacheIsFresh()) { pill.className = 'quota-pill none'; pill.textContent = '🎟️ …'; return; }
+        if (todayMaxTokens <= 0) { pill.className = 'quota-pill none'; pill.textContent = '🎟️ No limit set'; return; }
+
+        var used = 0;
+        scannerData.forEach(function(d) { used += parseInt(d.plates, 10) || 0; });
+        var left = todayMaxTokens - used;
+
+        if (left <= 0) {
+            pill.className = 'quota-pill over';
+            pill.textContent = '⚠️ Quota over' + (left < 0 ? ' · ' + (-left) + ' extra' : '');
+        } else {
+            pill.className = 'quota-pill' + (left <= Math.max(10, Math.round(todayMaxTokens * 0.1)) ? ' low' : '');
+            pill.textContent = '🎟️ ' + left + ' left';
+        }
+    }
+
+    function cacheIsFresh() {
+        return scannerDataLoaded && scannerDataDate === getTodayStr();
+    }
+    function cacheFindByCode(code) {
+        if (!cacheIsFresh()) return null;
+        var c = String(code || '').trim().toUpperCase();
+        for (var i = 0; i < scannerData.length; i++) {
+            if (String(scannerData[i].couponCode).toUpperCase() === c) return scannerData[i];
+        }
+        return null;
+    }
+    function cacheFindByPhone(digits) {
+        return scannerData.filter(function(d) {
+            return String(d.phone == null ? '' : d.phone).replace(/\D/g, '').indexOf(digits) !== -1;
+        });
+    }
+
+    function upsertScannerEntry(entry) {
+        for (var i = 0; i < scannerData.length; i++) {
+            if (scannerData[i].couponCode === entry.couponCode) { Object.assign(scannerData[i], entry); return; }
+        }
+        scannerData.push(entry);
+    }
+    // (quota badge is refreshed by the caller right after upsertScannerEntry)
+
+    function patchScannerData(couponCode, patch) {
+        for (var i = 0; i < scannerData.length; i++) {
+            if (scannerData[i].couponCode === couponCode) {
+                Object.assign(scannerData[i], patch);
+                return;
+            }
+        }
+    }
+
+    // ============================================================
+    // Login / Logout
+    // ============================================================
+    // Role: Volunteer (ADMIN_PIN) sees Scanner only; Super admin sees everything.
+    var isSuperAdmin = false;
+    function applyRole() {
+        var show = isSuperAdmin ? '' : 'none';
+        ['.stats-bar', '.filter-bar', '.tabs'].forEach(function(sel) {
+            var el = document.querySelector(sel);
+            if (el) el.style.display = show;
+        });
+        var title = document.getElementById('adminTitle');
+        if (title) title.textContent = isSuperAdmin ? '🍽️ Bhog Distribution Admin' : '🍽️ Bhog Counter';
+        switchTab('scanner');   // always start on the scanner
+    }
+
+    function loginAdmin() {
+        var pin = document.getElementById('pinInput').value;
+        var superPin = CONFIG.SUPER_ADMIN_PIN || CONFIG.ADMIN_PIN;   // no super PIN set -> ADMIN_PIN keeps full access
+        if (pin === superPin || pin === CONFIG.ADMIN_PIN) {
+            isSuperAdmin = (pin === superPin);
+            applyRole();
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            populateDateFilter();
+            initWalkinTab();
+            initManualCodeInput();
+            refreshData();
+            startScannerCacheRefresh();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+            document.getElementById('pinInput').value = '';
+            document.getElementById('pinInput').focus();
+        }
+    }
+
+    function logoutAdmin() {
+        if (isScanning) toggleScanner();
+        if (scannerCacheTimer) { clearInterval(scannerCacheTimer); scannerCacheTimer = null; }
+        scannerData = []; scannerDataLoaded = false; todayMaxTokens = null;
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('pinInput').value = '';
+        isSuperAdmin = false;
+    }
+
+    // ============================================================
+    // Date filter
+    // ============================================================
+    function populateDateFilter() {
+        var select = document.getElementById('dateFilter');
+        CONFIG.EVENT_DATES.forEach(function(dateStr) {
+            var d = new Date(dateStr + 'T00:00:00');
+            var option = document.createElement('option');
+            option.value = dateStr;
+            option.textContent = getDayLabel(dateStr) + ' — ' + d.toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric'
+            });
+            select.appendChild(option);
+        });
+
+        // Default to a SINGLE day (never "All Dates" on load):
+        // today if it's an event day, else the next upcoming event day, else the last one.
+        var todayStr = getTodayStr();
+        var pick = CONFIG.EVENT_DATES.filter(function(x) { return x >= todayStr; })[0] ||
+                   CONFIG.EVENT_DATES[CONFIG.EVENT_DATES.length - 1];
+        if (pick) select.value = pick;
+    }
+
+    // "Day 2 Maha Saptami" for a date (empty string if not an event date)
+    function getDayLabel(dateStr) {
+        var i = CONFIG.EVENT_DATES.indexOf(dateStr);
+        if (i < 0) return '';
+        var label = (CONFIG.EVENT_DAY_LABELS || [])[i];
+        return 'Day ' + (i + 1) + (label ? ' ' + label : '');
+    }
+
+    // The date the Search / Scanner-search / Members tabs work on:
+    // the selected date in the filter, or today when the filter is "All Dates".
+    function getFocusDate() {
+        var v = document.getElementById('dateFilter').value;
+        return (v && v !== 'all') ? v : getTodayStr();
+    }
+
+    function updateScopeLabels() {
+        var v = document.getElementById('dateFilter').value;
+        var f = getFocusDate();
+        var lbl = getDayLabel(f) || f;
+        var sc = document.getElementById('scannerSearchScope');
+        if (sc) sc.textContent = (f === getTodayStr() ? 'today' : lbl);
+        var ss = document.getElementById('searchScope');
+        if (ss) ss.textContent = (v === 'all')
+            ? 'Searching ALL dates (every day loaded). Pick a day in the filter above to narrow it.'
+            : 'Searching ' + lbl + ' only. Choose "All Dates" in the filter above to search every day.';
+    }
+
+    function getTodayStr() {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = String(now.getMonth() + 1).padStart(2, '0');
+        var d = String(now.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+    }
+
+    function getTodayFormatted() {
+        var now = new Date();
+        return now.toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+
+    // ============================================================
+    // Tab switching
+    // ============================================================
+    function switchTab(tabName, btnEl) {
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+
+        if (btnEl) {
+            btnEl.classList.add('active');
+        } else {
+            // Fallback: find button by data-tab
+            var btn = document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+            if (btn) btn.classList.add('active');
+        }
+        document.getElementById('tab-' + tabName).classList.add('active');
+        updateScopeLabels();
+
+        // Tab-specific actions
+        if (tabName === 'dates') {
+            loadDateSettings();
+        }
+        if (tabName === 'summary') {
+            loadSummary();
+        }
+        if (tabName === 'members') {
+            loadMembersStatus();
+        }
+
+        // Stop scanner when switching away
+        if (tabName !== 'scanner' && isScanning) {
+            toggleScanner();
+        }
+    }
+
+    // ============================================================
+    // Data fetching
+    // ============================================================
+    function refreshData(silent) {
+        if (!isSuperAdmin) return;   // volunteers use the scanner cache only — skip the heavy list/stats load
+        var dateFilter = document.getElementById('dateFilter').value;
+        var seq = ++refreshSeq;
+        var box = document.getElementById('allEntries');
+        updateScopeLabels();
+
+        if (silent !== true) {
+            dataLoaded = false;
+            box.innerHTML = '<div class="no-results">Loading entries...</div>';
+        }
+
+        function fail(msg) {
+            if (seq !== refreshSeq) return;
+            if (silent === true) return;
+            box.innerHTML = '<div class="no-results">⚠️ ' + escHtml(msg) +
+                '<br><button class="retry-btn" onclick="refreshData()">🔄 Retry</button></div>';
+        }
+
+        jsonpRequest(
+            { action: 'list', date: dateFilter },
+            function(result) {
+                if (seq !== refreshSeq) return;   // a newer request superseded this one
+                if (result && result.status === 'success') {
+                    allData = result.data || [];
+                    dataLoaded = true;
+                    updateStats();
+                    renderAllEntries();
+                } else {
+                    fail('Could not load entries: ' + ((result && result.message) || 'Unknown error'));
+                }
+            },
+            function(err) {
+                console.error('Refresh error:', err);
+                fail('Could not load entries (' + ((err && err.message) || 'connection problem') + ').');
+            },
+            45000
+        );
+
+        // Keep the currently open data tab in step with the date filter
+        if (silent !== true) {
+            var active = document.querySelector('.tab-btn.active');
+            var tab = active && active.getAttribute('data-tab');
+            if (tab === 'summary') loadSummary();
+            if (tab === 'members') loadMembersStatus();
+        }
+    }
+
+    function updateStats() {
+        var total = allData.length;
+        var redeemed = allData.filter(function(d) { return d.redeemed; }).length;
+        var pending = total - redeemed;
+
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statRedeemed').textContent = redeemed;
+        document.getElementById('statPending').textContent = pending;
+    }
+
+    // ============================================================
+    // QR Scanner
+    // ============================================================
+    function toggleScanner() {
+        var btn = document.getElementById('scanBtn');
+
+        if (isScanning) {
+            html5QrCode.stop().then(function() {
+                isScanning = false;
+                btn.textContent = '📷 Start Scanner';
+                btn.classList.remove('scanning');
+            }).catch(function(err) { console.error('Stop error:', err); });
+        } else {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode('qr-reader');
+            }
+
+            html5QrCode.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanError
+            ).then(function() {
+                isScanning = true;
+                btn.textContent = '⏹️ Stop Scanner';
+                btn.classList.add('scanning');
+            }).catch(function(err) {
+                console.error('Camera error:', err);
+                alert('Could not access camera. Please allow camera permission and try again.');
+            });
+        }
+    }
+
+    function onScanSuccess(decodedText) {
+        var code = decodedText;
+
+        // Extract code from URL if needed
+        if (decodedText.indexOf('code=') !== -1) {
+            try {
+                var url = new URL(decodedText);
+                code = url.searchParams.get('code');
+            } catch(e) {
+                var match = decodedText.match(/code=([A-Z0-9-]+)/);
+                if (match) code = match[1];
+            }
+        }
+
+        // Accept any PREFIX-XXXX format (handles TEST- and BHOG- without hardcoding)
+        if (code && /^[A-Z]+-[A-Z0-9]{4}$/.test(code)) {
+            if (isScanning) toggleScanner();
+            if (navigator.vibrate) navigator.vibrate(200);
+            lookupCode(code);
+        }
+    }
+
+    function onScanError(errorMessage) {
+        // Ignore — fires continuously until a QR is found
+    }
+
+    // ============================================================
+    // Manual code entry
+    // ============================================================
+    function lookupManual() {
+        var input = document.getElementById('manualCode');
+        var code = input.value.trim().toUpperCase();
+        var prefix = (CONFIG.COUPON_PREFIX || 'BHOG') + '-';
+        // Must have at least prefix + 1 char to be a real code
+        if (!code || code.length <= prefix.length) return;
+        lookupCode(code);
+        // Reset input to prefix so admin is immediately ready for the next scan
+        input.value = prefix;
+        input.focus();
+    }
+
+    // ============================================================
+    // Scanner tab: phone search (today only, exact 10 digits)
+    // ============================================================
+    var scannerSearchTimer = null;
+
+    function scannerSearchOnInput(val) {
+        var digits = val.replace(/\D/g, '');
+        if (digits.length === 10) {
+            // Auto-search as soon as 10 digits are entered
+            if (scannerSearchTimer) clearTimeout(scannerSearchTimer);
+            scannerSearchTimer = setTimeout(scannerSearch, 0);
+        } else {
+            resultBox().innerHTML = '';
+            clearAutoPrefill();   // number is being edited — don't leave a stale typo in the walk-in form
+        }
+    }
+
+    // Walk-in phone auto-filled from a "not found" search. Tracked so we only
+    // overwrite/clear it when the admin hasn't typed their own number there.
+    var walkinPrefilledPhone = '';
+    function prefillWalkinPhone(q) {
+        var el = document.getElementById('walkinPhone');
+        if (!el) return;
+        if (!el.value || el.value === walkinPrefilledPhone) { el.value = q; walkinPrefilledPhone = q; }
+    }
+    function clearAutoPrefill() {
+        var el = document.getElementById('walkinPhone');
+        if (el && walkinPrefilledPhone && el.value === walkinPrefilledPhone) el.value = '';
+        walkinPrefilledPhone = '';
+    }
+    function clearScannerSearch() {
+        var inp = document.getElementById('scannerSearchInput');
+        inp.value = '';
+        resultBox().innerHTML = '';
+        clearAutoPrefill();
+        inp.focus();
+    }
+    function jumpToWalkin() {
+        var card = document.getElementById('walkinCard');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var n = document.getElementById('walkinName');
+        if (n) n.focus();
+    }
+
+    function scannerSearch() {
+        var raw = document.getElementById('scannerSearchInput').value.trim();
+        var query = raw.replace(/\D/g, '');
+
+        if (query.length !== 10) {
+            showMessageCard('Enter a 10-digit phone number');
+            return;
+        }
+
+        currentScanCode = null;                 // a phone search replaces any code result (and cancels its background check)
+        var searchDate = getTodayStr();         // always today only
+
+        // FAST PATH: today's tab is already in memory -> no network at all
+        if (cacheIsFresh()) {
+            renderPhoneResults(cacheFindByPhone(query), query);
+            return;
+        }
+
+        showMessageCard('⏳ Searching today...');
+        jsonpRequest(
+            { action: 'quickSearch', query: query, date: searchDate, includeRedeemed: 'true' },
+            function(result) {
+                if (result.status === 'success') renderPhoneResults(result.data || [], query);
+                else showMessageCard(result.message || 'Search failed', 'result-notfound');
+            },
+            function() { showMessageCard('Connection error while searching', 'result-notfound'); }
+        );
+    }
+
+    // ============================================================
+    // ONE result card design — used by QR scan, manual code AND phone search
+    // ============================================================
+    function resultBox() { return document.getElementById('scanResult'); }
+
+    function showMessageCard(text, cls) {
+        resultBox().innerHTML = '<div class="scan-result show ' + (cls || '') + '">' +
+            '<div class="result-header" style="font-size:15px;">' + text + '</div></div>';
+    }
+
+    function cardHtml(d) {
+        var redeemed = !!d.redeemed;
+        var rows =
+            '<span>Name:</span> ' + escHtml(d.name) + '<br>' +
+            '<span>Phone:</span> ' + escHtml(d.phone) + '<br>' +
+            '<span>Date:</span> ' + escHtml(d.date) + '<br>' +
+            '<span>Plates:</span> ' + escHtml(String(d.plates)) + '<br>' +
+            '<span>Code:</span> ' + escHtml(d.couponCode);
+        if (redeemed) {
+            return '<div class="scan-result show result-redeemed">' +
+                '<div class="result-header">⚠️ Already Redeemed</div>' +
+                '<div class="result-details">' + rows +
+                    (d.redeemedAt ? '<br><span>Redeemed at:</span> ' + escHtml(String(d.redeemedAt)) : '') + '</div>' +
+                '</div>';
+        }
+        return '<div class="scan-result show result-valid">' +
+            '<div class="result-header">✅ Valid Coupon</div>' +
+            '<div class="result-details">' + rows + '</div>' +
+            '<button class="btn-redeem" onclick="redeemCard(this, \'' + escAttr(d.couponCode) + '\', \'' + escAttr(d.date || getTodayStr()) + '\')">' +
+                '✅ Mark as Redeemed — Give ' + escHtml(String(d.plates)) + ' plate(s)</button>' +
+            '</div>';
+    }
+
+    function showCards(list) {
+        resultBox().innerHTML = list.slice(0, 10).map(cardHtml).join('');
+    }
+
+    function renderPhoneResults(results, query) {
+        if (results.length === 0) {
+            resultBox().innerHTML = '<div class="scan-result show result-notfound">' +
+                '<div class="result-header">❌ No registration found for today</div>' +
+                '<div class="result-details">Typo? Edit the number above to search again, or register this number as a walk-in.</div>' +
+                '<button class="btn-redeem" style="background:#3498db;" onclick="jumpToWalkin()">➕ Walk-in this number ↓</button>' +
+                '</div>';
+            if (query) prefillWalkinPhone(query);
+            return;
+        }
+        clearAutoPrefill();
+        showCards(results);
+    }
+
+    // Redeem from any card (scan, manual code, or phone search)
+    function redeemCard(btn, code, date) {
+        var card = btn.closest('.scan-result');
+        btn.disabled = true;
+        btn.textContent = '⏳ Redeeming...';
+        jsonpRequest(
+            { action: 'redeem', code: code, date: date || getTodayStr() },
+            function(result) {
+                if (result.status === 'success') {
+                    card.className = 'scan-result show result-redeemed';
+                    card.querySelector('.result-header').textContent = '🎉 Redeemed Successfully!';
+                    btn.textContent = '✅ Done — Plates Given';
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                    patchScannerData(code, { redeemed: true, redeemedAt: new Date().toISOString() });
+                    refreshData(true);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = '✅ Mark as Redeemed';
+                    alert('Redeem failed: ' + (result.message || 'Unknown error'));
+                }
+            },
+            function() {
+                btn.disabled = false;
+                btn.textContent = '✅ Mark as Redeemed';
+                alert('Connection error. Please try again.');
+            }
+        );
+    }
+
+    // ============================================================
+    // Coupon lookup (QR scan + manual code)
+    // ============================================================
+    function lookupCode(code, dateHint) {
+        currentScanCode = code;
+        currentScanDate = dateHint || getTodayStr();
+
+        // A code lookup replaces any phone-search result — clear the phone box too
+        var phoneInput = document.getElementById('scannerSearchInput');
+        if (phoneInput) phoneInput.value = '';
+        clearAutoPrefill();
+
+        // FAST PATH: coupon is in today's in-memory copy -> show instantly,
+        // then quietly confirm with the server (catches a redeem done on
+        // another device within the last cache-refresh window).
+        var cached = cacheFindByCode(code);
+        if (cached) {
+            showCards([cached]);
+            jsonpRequest(
+                { action: 'lookup', code: code, date: currentScanDate },
+                function(result) {
+                    if (currentScanCode !== code) return;              // admin already moved on
+                    if (result.status === 'found' && result.redeemed && !cached.redeemed) {
+                        patchScannerData(result.couponCode, { redeemed: true, redeemedAt: result.redeemedAt });
+                        showCards([result]);                           // flip to "Already Redeemed"
+                    }
+                },
+                function() { /* silent — redeem is re-checked server-side anyway */ },
+                15000
+            );
+            return;
+        }
+
+        // SLOW PATH: not cached (cache not loaded yet, or code is from another day)
+        showMessageCard('⏳ Looking up...');
+        jsonpRequest(
+            { action: 'lookup', code: code, date: currentScanDate },
+            function(result) {
+                if (currentScanCode !== code) return;
+                if (result.status === 'found') {
+                    showCards([result]);
+                } else {
+                    showMessageCard('❌ Coupon Not Found<div style="font-weight:400;font-size:14px;margin-top:8px;">Code "' +
+                        escHtml(code) + '" does not exist. Check the code and try again.</div>', 'result-notfound');
+                }
+            },
+            function(err) {
+                console.error('Lookup error:', err);
+                showMessageCard('⚠️ Connection Error<div style="font-weight:400;font-size:14px;margin-top:8px;">Could not reach the server. Check your internet and try again.</div>', 'result-notfound');
+            }
+        );
+    }
+
+    // ============================================================
+    // Search
+    // ============================================================
+    function searchEntries() {
+        var raw = document.getElementById('searchInput').value.trim();
+        var q = raw.toLowerCase();
+        if (!q) return;
+        updateScopeLabels();
+
+        if (!dataLoaded) {
+            document.getElementById('searchResults').innerHTML =
+                '<div class="no-results">Entries are still loading — try again in a moment.</div>';
+            return;
+        }
+
+        var qDigits = q.replace(/\D/g, '');
+        var results = allData.filter(function(d) {
+            // Values can arrive as numbers (phones) — always coerce to string first
+            var name = String(d.name == null ? '' : d.name).toLowerCase();
+            var code = String(d.couponCode == null ? '' : d.couponCode).toLowerCase();
+            var phone = String(d.phone == null ? '' : d.phone);
+            if (name.indexOf(q) !== -1 || code.indexOf(q) !== -1 || phone.toLowerCase().indexOf(q) !== -1) return true;
+            // digits-only phone match: "98765 43210", "+91-98765…", or just the last 4 digits
+            return qDigits.length >= 3 && phone.replace(/\D/g, '').indexOf(qDigits) !== -1;
+        });
+
+        renderSearchResults(results);
+    }
+
+    // One compact card for Search + All Entries:
+    //   line 1: name   line 2: phone · day · plates · code   line 3: call / WhatsApp / copy / redeem
+    function entryRowHtml(d) {
+        var waHref = buildWaReminderHref(d);
+        return '<div class="search-result-item entry-card">' +
+            '<div class="name">' + escHtml(d.name) + '</div>' +
+            '<div class="meta"><span class="mleft">' + escHtml(d.phone) + ' · ' + escHtml(getDayLabel(d.date) || d.date) + ' · ' +
+                escHtml(String(d.plates)) + ' plate(s)</span><span class="ccode">' + escHtml(d.couponCode) + '</span></div>' +
+            '<div class="ico-row">' +
+                '<a class="ico-btn call" href="tel:' + escAttr(d.phone) + '" title="Call">📞</a>' +
+                (waHref && !d.redeemed ? '<a class="ico-btn wa" href="' + escAttr(waHref) + '" target="_blank" rel="noopener" title="Send WhatsApp reminder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>' : '') +
+                '<span class="ico-btn" onclick="copyPhone(\'' + escAttr(d.phone) + '\', this)" title="Copy number">📋</span>' +
+                (d.redeemed
+                    ? '<button class="btn-small-redeem redeemed">✅ Done</button>'
+                    : '<button class="btn-small-redeem" onclick="redeemFromList(\'' + escAttr(d.couponCode) + '\', this, \'' + escAttr(d.date) + '\')">Redeem</button>') +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderSearchResults(results) {
+        var container = document.getElementById('searchResults');
+
+        if (results.length === 0) {
+            container.innerHTML = '<div class="no-results">No results found</div>';
+            return;
+        }
+
+        var html = '';
+        results.forEach(function(d) {
+            html += entryRowHtml(d);
+        });
+
+        container.innerHTML = html;
+    }
+
+    // ============================================================
+    // All entries list
+    // ============================================================
+    function buildWaReminderHref(d) {
+        var phoneDigits = String(d.phone || '').replace(/\D/g, '');
+        var cc = String(CONFIG.DEFAULT_COUNTRY_CODE || '91').replace(/\D/g, '');
+        var waNum = phoneDigits.length === 10 ? cc + phoneDigits : phoneDigits;
+        if (!waNum) return '';
+        var first = (d.name || '').split(' ')[0] || 'there';
+        var dayTxt = (getDayLabel(d.date) ? getDayLabel(d.date) + ' · ' : '') +
+            new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        var couponUrl = appBaseUrl() + '/coupon.html?code=' + encodeURIComponent(d.couponCode);
+        var msg = 'Namaskar ' + first + ' 🙏\nYour Agomoni Durga Puja bhog coupon for ' + dayTxt + ' is confirmed: ' +
+            d.couponCode + ' (' + d.plates + ' plate(s)).\nPlease show it at the counter: ' + couponUrl + '\nJoy Ma Durga! 🪷';
+        return 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(msg);
+    }
+
+    function renderAllEntries() {
+        var container = document.getElementById('allEntries');
+
+        if (allData.length === 0) {
+            container.innerHTML = '<div class="no-results">No registrations found</div>';
+            return;
+        }
+
+        var html = '';
+        allData.forEach(function(d) {
+            html += entryRowHtml(d);
+        });
+
+        container.innerHTML = html;
+    }
+
+    function copyPhone(phone, el) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(phone).then(function() {
+                var orig = el.textContent;
+                el.textContent = '✅';
+                setTimeout(function() { el.textContent = orig; }, 1200);
+            });
+        } else {
+            // Fallback for older browsers
+            var ta = document.createElement('textarea');
+            ta.value = phone;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            var orig = el.textContent;
+            el.textContent = '✅';
+            setTimeout(function() { el.textContent = orig; }, 1200);
+        }
+    }
+
+    // ============================================================
+    // Redeem from list/search
+    // ============================================================
+    function redeemFromList(code, btn, date) {
+        btn.disabled = true;
+        btn.textContent = '⏳...';
+
+        jsonpRequest(
+            { action: 'redeem', code: code, date: date || getTodayStr() },
+            function(result) {
+                if (result.status === 'success') {
+                    btn.textContent = '✅ Done';
+                    btn.classList.add('redeemed');
+
+                    var entry = allData.find(function(d) { return d.couponCode === code; });
+                    if (entry) entry.redeemed = true;
+                    patchScannerData(code, { redeemed: true, redeemedAt: new Date().toISOString() });
+                    updateStats();
+                } else {
+                    btn.textContent = 'Retry';
+                    btn.disabled = false;
+                }
+            },
+            function(err) {
+                btn.textContent = 'Retry';
+                btn.disabled = false;
+            }
+        );
+    }
+
+    // ============================================================
+    // Date Management (toggle enable/disable + token limits)
+    // ============================================================
+    function loadDateSettings() {
+        jsonpRequest(
+            { action: 'getDateSettings' },
+            function(result) {
+                if (result.status === 'success') {
+                    renderDateToggles(result.dates);
+                }
+            },
+            function() {
+                document.getElementById('dateToggles').innerHTML =
+                    '<div class="no-results">Could not load date settings</div>';
+            }
+        );
+    }
+
+    function renderDateToggles(dates) {
+        var container = document.getElementById('dateToggles');
+        container.innerHTML = '';
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        var dateMap = {};
+        dates.forEach(function(d) { dateMap[d.date] = d; });
+
+        CONFIG.EVENT_DATES.forEach(function(dateStr, index) {
+            var d = new Date(dateStr + 'T00:00:00');
+            var isPast = d < today;
+            var backendData = dateMap[dateStr] || {};
+            var isEnabled = backendData.enabled !== undefined ? backendData.enabled : true;
+            var maxTokens = backendData.maxTokens !== undefined ? backendData.maxTokens : 0;   // 0 = unlimited
+            var issuedCount = backendData.issuedCount || 0;
+            // "Full" only makes sense when a limit is actually set (max 0 = unlimited)
+            var isFull = maxTokens > 0 && issuedCount >= maxTokens;
+
+            var dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+            var dateFormatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            var festival = (CONFIG.EVENT_DAY_LABELS || [])[index] || '';
+
+            var statusText, statusClass;
+            if (isPast) { statusText = 'Past'; statusClass = 'past'; }
+            else if (isEnabled) { statusText = 'Open'; statusClass = 'open'; }
+            else { statusText = 'Closed'; statusClass = 'closed'; }
+
+            var row = document.createElement('div');
+            row.className = 'date-toggle-row';
+
+            row.innerHTML =
+                '<div class="date-info">' +
+                    '<div class="date-day">Day ' + (index + 1) + (festival ? ' ' + escHtml(festival) : '') + ' — ' + dayName + '</div>' +
+                    '<div class="date-full">' + dateFormatted + '</div>' +
+                    (isPast ? '<div class="date-past">Auto-closed (past date)</div>' : '') +
+                '</div>' +
+                '<div class="date-controls">' +
+                    '<div class="token-limit-group">' +
+                        '<label>Max:</label>' +
+                        '<input type="number" id="maxTokens_' + index + '" value="' + maxTokens + '" min="0" ' +
+                            'title="0 = unlimited" ' +
+                            (isPast ? 'disabled' : '') +
+                            ' onchange="handleMaxTokensChange(\'' + dateStr + '\', this.value, ' + index + ')">' +
+                    '</div>' +
+                    '<span class="issued-count" id="issuedCount_' + index + '">' + issuedCount + ' / ' + (maxTokens > 0 ? maxTokens : '∞') + '</span>' +
+                    (isFull ? '<span class="badge-full">Full</span>' : '') +
+                    '<span class="toggle-status ' + statusClass + '" id="toggleStatus_' + index + '">' + statusText + '</span>' +
+                    '<label class="toggle-switch">' +
+                        '<input type="checkbox" id="toggle_' + index + '" ' +
+                            'data-date="' + dateStr + '" ' +
+                            (isEnabled ? 'checked' : '') + ' ' +
+                            (isPast ? 'disabled' : '') +
+                            ' onchange="handleDateToggle(this, ' + index + ')">' +
+                        '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                '</div>';
+
+            container.appendChild(row);
+        });
+    }
+
+    function handleDateToggle(checkbox, index) {
+        var dateStr = checkbox.getAttribute('data-date');
+        var enabled = checkbox.checked;
+        var statusEl = document.getElementById('toggleStatus_' + index);
+
+        // Optimistic UI update
+        statusEl.textContent = enabled ? 'Open' : 'Closed';
+        statusEl.className = 'toggle-status ' + (enabled ? 'open' : 'closed');
+
+        jsonpRequest(
+            { action: 'toggleDate', date: dateStr, enabled: String(enabled) },
+            function(result) {
+                if (result.status !== 'success') {
+                    checkbox.checked = !enabled;
+                    statusEl.textContent = !enabled ? 'Open' : 'Closed';
+                    statusEl.className = 'toggle-status ' + (!enabled ? 'open' : 'closed');
+                    alert('Failed to update date setting');
+                }
+            },
+            function() {
+                checkbox.checked = !enabled;
+                statusEl.textContent = !enabled ? 'Open' : 'Closed';
+                statusEl.className = 'toggle-status ' + (!enabled ? 'open' : 'closed');
+                alert('Connection error. Could not update.');
+            }
+        );
+    }
+
+    function handleMaxTokensChange(dateStr, value, index) {
+        var maxTokens = parseInt(value, 10);
+        if (isNaN(maxTokens) || maxTokens < 0) {
+            alert('Please enter a valid number (0 = unlimited)');
+            return;
+        }
+
+        jsonpRequest(
+            { action: 'setDateLimit', date: dateStr, maxTokens: String(maxTokens) },
+            function(result) {
+                if (result.status === 'success') {
+                    // Reload from the server so Max / issued / Full badge all reflect what was really saved
+                    loadDateSettings();
+                } else {
+                    alert('Failed to update limit: ' + (result.message || 'Unknown error'));
+                }
+            },
+            function() {
+                alert('Connection error. Could not update limit.');
+            }
+        );
+    }
+
+    // ============================================================
+    // Walk-in Registration
+    // ============================================================
+    var walkinAutoHideTimer = null;
+
+    function initWalkinTab() {
+        // Set today's date label
+        document.getElementById('walkinDateLabel').textContent = '📅 ' + getTodayFormatted() +
+            (getDayLabel(getTodayStr()) ? '  ·  ' + getDayLabel(getTodayStr()) : '');
+        loadRecentWalkins();
+
+        // Set max plates from config
+        var maxPlatesSpan = document.getElementById('walkinMaxPlates');
+        var platesInput = document.getElementById('walkinPlates');
+        if (maxPlatesSpan) maxPlatesSpan.textContent = CONFIG.MAX_PLATES;
+        if (platesInput) {
+            platesInput.max = CONFIG.MAX_PLATES;
+            platesInput.setAttribute('max', CONFIG.MAX_PLATES);
+        }
+    }
+
+    // ============================================================
+    // Manual code input — pre-fill prefix so admin types less
+    // ============================================================
+    function initManualCodeInput() {
+        var prefix = (CONFIG.COUPON_PREFIX || 'BHOG') + '-';
+        var input = document.getElementById('manualCode');
+        if (!input) return;
+
+        // Update placeholder and maxlength to match prefix length + 4 chars
+        input.placeholder = prefix + 'XXXX';
+        input.maxLength = prefix.length + 4;
+        input.value = prefix;
+
+        // Keep prefix intact: prevent deleting past the dash
+        input.addEventListener('keydown', function(e) {
+            var minLen = prefix.length;
+            if ((e.key === 'Backspace' || e.key === 'Delete') &&
+                this.selectionStart <= minLen && this.selectionEnd <= minLen) {
+                e.preventDefault();
+            }
+        });
+
+        // Prevent pasting over the prefix
+        input.addEventListener('input', function() {
+            var val = this.value.toUpperCase();
+            if (!val.startsWith(prefix)) {
+                // Recover: extract whatever the user typed after any dash, re-attach prefix
+                var typed = val.replace(/^[A-Z]+-?/, '');
+                this.value = prefix + typed.replace(/[^A-Z0-9]/g, '').substring(0, 4);
+            } else {
+                // Clean up the suffix part (after the dash)
+                var suffix = val.substring(prefix.length).replace(/[^A-Z0-9]/g, '').substring(0, 4);
+                this.value = prefix + suffix;
+            }
+        });
+
+        // Place cursor after the prefix on focus
+        input.addEventListener('focus', function() {
+            var pos = this.value.length;
+            this.setSelectionRange(pos, pos);
+        });
+    }
+
+    // ---- Recently-added walk-ins (client-side, this browser session) ----
+    var recentWalkins = [];
+    var RECENT_KEY = 'agomoni_recent_walkins';
+
+    function loadRecentWalkins() {
+        try { recentWalkins = JSON.parse(sessionStorage.getItem(RECENT_KEY) || '[]'); } catch (e) { recentWalkins = []; }
+        var today = getTodayStr();
+        recentWalkins = recentWalkins.filter(function(w) { return w.date === today; });
+        renderRecentWalkins();
+    }
+    function saveRecentWalkins() {
+        try { sessionStorage.setItem(RECENT_KEY, JSON.stringify(recentWalkins)); } catch (e) { /* storage unavailable — fine */ }
+    }
+    function phoneKey(p) { var d = String(p || '').replace(/\D/g, ''); return d.length > 10 ? d.slice(-10) : d; }
+    function findRecentWalkin(phone) {
+        var k = phoneKey(phone), cutoff = Date.now() - 10 * 60 * 1000;
+        for (var i = 0; i < recentWalkins.length; i++) {
+            if (phoneKey(recentWalkins[i].phone) === k && recentWalkins[i].ts > cutoff) return recentWalkins[i];
+        }
+        return null;
+    }
+    function rememberWalkin(name, phone, plates, result) {
+        var k = phoneKey(phone);
+        recentWalkins = recentWalkins.filter(function(w) { return phoneKey(w.phone) !== k; });
+        recentWalkins.unshift({ name: name, phone: phone, plates: plates, code: result.couponCode, date: result.date || getTodayStr(), ts: Date.now() });
+        recentWalkins = recentWalkins.slice(0, 8);
+        saveRecentWalkins();
+        renderRecentWalkins();
+    }
+    function renderRecentWalkins() {
+        var wrap = document.getElementById('walkinRecent');
+        var list = document.getElementById('walkinRecentList');
+        if (!wrap || !list) return;
+        wrap.style.display = recentWalkins.length ? 'block' : 'none';
+        list.innerHTML = recentWalkins.map(function(w) {
+            return '<div class="wr-item"><span>' + escHtml(w.name) + ' · ' + escHtml(w.phone) + ' · ' + escHtml(String(w.plates)) + ' plate(s)</span>' +
+                   '<span class="wr-code">' + escHtml(w.code) + '</span></div>';
+        }).join('');
+    }
+    function applyWalkinLocally(result, name, phone, plates) {
+        var f = document.getElementById('dateFilter').value;
+        if (f !== 'all' && f !== result.date) return;
+        var now = result.timestamp || new Date().toISOString();
+        var e = allData.filter(function(x) { return x.couponCode === result.couponCode; })[0];
+        if (e) { e.plates = plates; e.redeemed = true; e.redeemedAt = now; }
+        else allData.push({ timestamp: now, name: name, phone: phone, date: result.date, plates: plates,
+                            couponCode: result.couponCode, redeemed: true, redeemedAt: now, source: 'Walk-in' });
+        updateStats();
+        renderAllEntries();
+        delete summaryCache[f];
+        delete summaryCache['all'];
+    }
+
+    function submitWalkin(e) {
+        e.preventDefault();
+
+        var nameInput = document.getElementById('walkinName');
+        var phoneInput = document.getElementById('walkinPhone');
+        var platesInput = document.getElementById('walkinPlates');
+        var submitBtn = document.getElementById('walkinSubmitBtn');
+
+        var name = nameInput.value.trim();
+        var phone = phoneInput.value.trim();
+        var plates = parseInt(platesInput.value, 10);
+        if (!name) name = 'Walk-in';   // name is optional
+
+        // Validate
+        if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+            alert('Please enter a valid 10-digit phone number');
+            phoneInput.focus();
+            return;
+        }
+        if (isNaN(plates) || plates < 1 || plates > CONFIG.MAX_PLATES || plates !== Math.floor(plates)) {
+            alert('Please enter a valid number of coupons (1-' + CONFIG.MAX_PLATES + ')');
+            platesInput.focus();
+            return;
+        }
+
+        // Recently-added cache: catch an accidental double-entry BEFORE hitting the server
+        var dup = findRecentWalkin(phone);
+        if (dup && !confirm(dup.name + ' (' + dup.phone + ') was already added a moment ago as ' + dup.code +
+                ' with ' + dup.plates + ' plate(s).\n\nUpdate it to ' + plates + ' plate(s)?')) {
+            return;
+        }
+
+        // Disable form
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Submitting...';
+
+        jsonpRequest(
+            { action: 'walkin', name: name, phone: phone, plates: String(plates) },
+            function(result) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register & Redeem';
+
+                if (result.status === 'success') {
+                    // Show success
+                    var successDiv = document.getElementById('walkinSuccess');
+                    document.getElementById('walkinSuccessCode').textContent = result.couponCode || result.code || 'Done';
+                    document.getElementById('walkinSuccessMsg').textContent =
+                        (result.updated ? 'Updated' : 'Registered') + ' & Redeemed — ' + plates + ' plate(s)';
+                    successDiv.classList.add('show');
+
+                    // Reset form for next walk-in
+                    nameInput.value = '';
+                    phoneInput.value = '';
+                    platesInput.value = '1';
+                    walkinPrefilledPhone = '';
+                    // clear the phone search so the next person starts clean
+                    var ssi = document.getElementById('scannerSearchInput');
+                    if (ssi) { ssi.value = ''; resultBox().innerHTML = ''; ssi.focus(); }
+                    // add to in-memory copy so they can be searched/scanned instantly
+                    upsertScannerEntry({ timestamp: result.timestamp || new Date().toISOString(), name: name, phone: phone,
+                        date: result.date, plates: plates, couponCode: result.couponCode, redeemed: true,
+                        redeemedAt: result.timestamp || new Date().toISOString(), source: 'Walk-in' });
+                    updateQuotaPill();
+
+                    // Auto-hide success after 3 seconds
+                    if (walkinAutoHideTimer) clearTimeout(walkinAutoHideTimer);
+                    walkinAutoHideTimer = setTimeout(function() {
+                        successDiv.classList.remove('show');
+                    }, 3000);
+
+                    // Remember it + patch the local list (no full reload per walk-in)
+                    rememberWalkin(name, phone, plates, result);
+                    applyWalkinLocally(result, name, phone, plates);
+                    loadScannerCache();
+                } else {
+                    alert('Walk-in failed: ' + (result.message || 'Unknown error'));
+                }
+            },
+            function(err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register & Redeem';
+                console.error('Walk-in error:', err);
+                alert('Connection error. Please try again.');
+            }
+        );
+    }
+
+    // ============================================================
+    // Summary / Dashboard
+    // ============================================================
+    function loadSummary() {
+        var scope = document.getElementById('dateFilter').value || 'all';
+        var contentDiv = document.getElementById('summaryContent');
+
+        // Stale-while-revalidate: show the last result instantly, refresh underneath
+        if (summaryCache[scope]) {
+            renderSummary(summaryCache[scope]);
+            contentDiv.insertAdjacentHTML('afterbegin', '<div class="scope-note" id="summaryRefreshing">🔄 Refreshing…</div>');
+        } else {
+            contentDiv.innerHTML = '<div class="summary-loading">Loading summary data...</div>';
+        }
+
+        jsonpRequest(
+            { action: 'summary', date: scope },
+            function(result) {
+                if (result.status === 'success') {
+                    summaryCache[scope] = result;
+                    if ((document.getElementById('dateFilter').value || 'all') === scope) renderSummary(result);
+                } else if (!summaryCache[scope]) {
+                    contentDiv.innerHTML = '<div class="no-results">Could not load summary: ' +
+                        escHtml(result.message || 'Unknown error') +
+                        '<br><button class="retry-btn" onclick="loadSummary()">🔄 Retry</button></div>';
+                }
+            },
+            function(err) {
+                console.error('Summary error:', err);
+                var r = document.getElementById('summaryRefreshing');
+                if (r) r.textContent = '⚠️ Could not refresh — showing last loaded data';
+                else contentDiv.innerHTML = '<div class="no-results">Could not load summary (slow connection).' +
+                    '<br><button class="retry-btn" onclick="loadSummary()">🔄 Retry</button></div>';
+            },
+            45000
+        );
+    }
+
+    function renderSummary(data) {
+        var contentDiv = document.getElementById('summaryContent');
+        var today = data.today || {};
+        var days = data.days || [];
+
+        // Compute totals
+        var totRegistered = 0, totWalkins = 0, totCoupons = 0, totRedeemed = 0, totPending = 0;
+        days.forEach(function(day) {
+            totRegistered += (day.registered || 0);
+            totWalkins += (day.walkins || 0);
+            totCoupons += (day.totalCoupons || 0);
+            totRedeemed += (day.redeemed || 0);
+            totPending += (day.pending || 0);
+        });
+
+        var html = '';
+
+        // Today's snapshot cards
+        var focusLabel = data.isToday ? 'Today\'s Snapshot' : ('Snapshot — ' + escHtml(getDayLabel(data.focusDate) || data.focusDate));
+        html += '<h3 style="font-size:16px; color:#555; margin-bottom:6px;">' + focusLabel + '</h3>';
+        html += '<div class="scope-note">' + (data.scope === 'all'
+            ? 'Showing all days.'
+            : 'Showing one day (fast). Pick "All Dates" in the filter above for the full breakdown.') + '</div>';
+        html += '<div class="summary-cards">';
+        html += summaryCardHtml('sc-blue', today.registered || 0, 'Registered (Online)');
+        html += summaryCardHtml('sc-purple', today.walkins || 0, 'Walk-ins');
+        html += summaryCardHtml('sc-teal', today.totalCoupons || 0, 'Total Coupons');
+        html += summaryCardHtml('sc-green', today.redeemed || 0, 'Redeemed');
+        html += summaryCardHtml('sc-orange', today.pending || 0, 'Pending');
+        var hasLimit = today.maxTokens > 0;
+        html += summaryCardHtml('sc-red',
+            hasLimit ? (today.remaining !== undefined ? today.remaining : Math.max(0, today.maxTokens - (today.totalCoupons || 0))) : '∞',
+            hasLimit ? 'Remaining / ' + today.maxTokens + ' Max' : 'No limit set'
+        );
+        html += '</div>';
+
+        // Day-wise table
+        html += '<h3 style="font-size:16px; color:#555; margin: 20px 0 12px;">Day-wise Breakdown</h3>';
+        html += '<div class="summary-table-wrap">';
+        html += '<table class="summary-table">';
+        html += '<thead><tr>' +
+            '<th>Day</th><th>Date</th><th>Registered</th><th>Walk-ins</th>' +
+            '<th>Total Coupons</th><th>Redeemed</th><th>Pending</th><th>Limit</th>' +
+            '</tr></thead>';
+        html += '<tbody>';
+
+        days.forEach(function(day, idx) {
+            var dateObj = new Date(day.date + 'T00:00:00');
+            var dayLabel = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+            var dateLabel = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            html += '<tr>' +
+                '<td>' + escHtml(getDayLabel(day.date) || ('Day ' + (idx + 1))) + ' (' + dayLabel + ')</td>' +
+                '<td>' + dateLabel + '</td>' +
+                '<td>' + (day.registered || 0) + '</td>' +
+                '<td>' + (day.walkins || 0) + '</td>' +
+                '<td>' + (day.totalCoupons || 0) + '</td>' +
+                '<td>' + (day.redeemed || 0) + '</td>' +
+                '<td>' + (day.pending || 0) + '</td>' +
+                '<td>' + (day.maxTokens > 0 ? day.maxTokens : '∞') + '</td>' +
+                '</tr>';
+        });
+
+        // Totals row
+        html += '<tr class="totals-row">' +
+            '<td colspan="2">Totals</td>' +
+            '<td>' + totRegistered + '</td>' +
+            '<td>' + totWalkins + '</td>' +
+            '<td>' + totCoupons + '</td>' +
+            '<td>' + totRedeemed + '</td>' +
+            '<td>' + totPending + '</td>' +
+            '<td>—</td>' +
+            '</tr>';
+
+        html += '</tbody></table></div>';
+
+        // Print button
+        html += '<div style="margin-top:20px; text-align:right;">' +
+            '<button class="btn-print" onclick="window.print()">🖨️ Print Report</button>' +
+            '</div>';
+
+        contentDiv.innerHTML = html;
+    }
+
+    function summaryCardHtml(colorClass, value, label) {
+        return '<div class="summary-card ' + colorClass + '">' +
+            '<div class="sc-value">' + value + '</div>' +
+            '<div class="sc-label">' + escHtml(label) + '</div>' +
+            '</div>';
+    }
+
+    // ============================================================
+    // Utility: HTML escaping
+    // ============================================================
+    function escHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str == null ? '' : String(str)));
+        return div.innerHTML;
+    }
+
+    function escAttr(str) {
+        return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    }
+
+    // ============================================================
+    // Members — pending pickup for today
+    // ============================================================
+    var membersData = null;
+    var membersFilter = 'all';
+    var membersQuery = '';
+    var MEMBER_CHIPS = ['✅ Notified', '📵 No answer', '👍 Coming', '🚫 Not coming'];
+
+    function loadMembersStatus() {
+        var headerEl = document.getElementById('membersHeader');
+        var listEl = document.getElementById('membersList');
+        headerEl.innerHTML = '<p style="color:#666; font-size:14px;">Loading member data...</p>';
+        listEl.innerHTML = '';
+        document.getElementById('membersFilters').innerHTML = '';
+
+        jsonpRequest(
+            { action: 'getMembersStatus', date: getFocusDate() },
+            function(result) {
+                if (result.status === 'success') {
+                    membersData = result;
+                    renderMembers();
+                } else {
+                    headerEl.innerHTML = '<p style="color:#e74c3c; font-size:14px;">⚠️ ' + escHtml(result.message || 'Could not load members') + '</p>';
+                }
+            },
+            function() {
+                headerEl.innerHTML = '<p style="color:#e74c3c; font-size:14px;">⚠️ Connection error. Could not load members data.</p>';
+            },
+            45000
+        );
+    }
+
+    function computeMemberCounts() {
+        var c = { total: 0, notRegistered: 0, pendingPickup: 0, redeemed: 0, noRemark: 0 };
+        membersData.members.forEach(function(m) {
+            c.total++;
+            if (m.status === 'not_registered') c.notRegistered++;
+            else if (m.status === 'registered') c.pendingPickup++;
+            else c.redeemed++;
+            if (!m.remarks) c.noRemark++;
+        });
+        return c;
+    }
+
+    function setMembersFilter(f) { membersFilter = f; renderMembers(); }
+    function onMembersSearch(v) { membersQuery = (v || '').trim().toLowerCase(); renderMembers(); }
+
+    function memberWaNumber(phone) {
+        var d = String(phone || '').replace(/\D/g, '');
+        var cc = String(CONFIG.DEFAULT_COUNTRY_CODE || '91').replace(/\D/g, '');
+        if (!d) return '';
+        if (d.length === 10) return cc + d;
+        if (d.length === 11 && d.charAt(0) === '0') return cc + d.slice(1);
+        return d;
+    }
+
+    function appBaseUrl() {
+        var b = CONFIG.BASE_URL || (location.origin + location.pathname.replace(/[^\/]*$/, ''));
+        return b.replace(/\/$/, '');
+    }
+
+    // Members tab: WhatsApp opens chat only — no predefined text
+    function memberWaHref(phone) {
+        var wa = memberWaNumber(phone);
+        return wa ? 'https://wa.me/' + wa : '';
+    }
+
+    var STATUS_TEXT = { not_registered: 'Not registered', registered: 'Pending pickup', redeemed: 'Collected' };
+
+    function fmtRemarkTime(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function renderMembers() {
+        if (!membersData) return;
+        var headerEl = document.getElementById('membersHeader');
+        var listEl = document.getElementById('membersList');
+        var filtersEl = document.getElementById('membersFilters');
+        var dateStr = membersData.date;
+        var c = computeMemberCounts();
+
+        var d = new Date(dateStr + 'T00:00:00');
+        headerEl.innerHTML =
+            '<div class="members-count">' + c.total + ' member(s)</div>' +
+            '<div class="members-subtitle">' + escHtml(getDayLabel(dateStr)) + ' · ' +
+                escHtml(d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })) +
+                ' — ' + c.pendingPickup + ' pending pickup · ' + c.redeemed + ' collected · ' + c.notRegistered + ' not registered</div>';
+
+        var chips = [
+            ['all', 'All', c.total],
+            ['not_registered', 'Not registered', c.notRegistered],
+            ['registered', 'Pending pickup', c.pendingPickup],
+            ['redeemed', 'Collected', c.redeemed],
+            ['no_remark', 'No remark yet', c.noRemark]
+        ];
+        filtersEl.innerHTML = chips.map(function(ch) {
+            return '<button class="mchip' + (membersFilter === ch[0] ? ' active' : '') + '" onclick="setMembersFilter(\'' + ch[0] + '\')">' +
+                ch[1] + ' (' + ch[2] + ')</button>';
+        }).join('');
+
+        var qDigits = membersQuery.replace(/\D/g, '');
+        var rows = membersData.members.filter(function(m) {
+            if (membersFilter === 'no_remark') { if (m.remarks) return false; }
+            else if (membersFilter !== 'all' && m.status !== membersFilter) return false;
+            if (!membersQuery) return true;
+            if (String(m.name).toLowerCase().indexOf(membersQuery) !== -1) return true;
+            return qDigits.length >= 3 && String(m.phone).replace(/\D/g, '').indexOf(qDigits) !== -1;
+        });
+
+        if (rows.length === 0) {
+            listEl.innerHTML = '<div class="no-results" style="padding:24px;">No members match this view</div>';
+            return;
+        }
+
+        listEl.innerHTML = rows.map(function(m) {
+            var waHref = memberWaHref(m.phone);
+            var meta = escHtml(m.phone || 'No phone');
+            if (m.status !== 'not_registered') meta += ' · ' + escHtml(String(m.plates)) + ' coupon(s) · ' + escHtml(m.couponCode);
+
+            return '<div class="member-card" id="mcard_' + m.row + '">' +
+                '<div class="mc-top">' +
+                    '<div class="member-info">' +
+                        '<div class="member-name">' + escHtml(m.name || '(no name)') +
+                            '<span class="mc-status st-' + m.status + '">' + STATUS_TEXT[m.status] + '</span></div>' +
+                        '<div class="member-meta">' + meta + '</div>' +
+                    '</div>' +
+                    '<div class="member-actions">' +
+                        (m.phone ? '<a class="btn-call icon" href="tel:' + escAttr(m.phone) + '" title="Call">📞</a>' : '') +
+                        (waHref ? '<a class="btn-wa" target="_blank" rel="noopener" href="' + escAttr(waHref) + '" title="Open WhatsApp">💬 WhatsApp</a>' : '') +
+                    '</div>' +
+                '</div>' +
+                (m.remarks
+                    ? '<div class="mc-remark-saved">📝 ' + escHtml(m.remarks) +
+                        (m.remarksUpdated ? '<small>' + escHtml(fmtRemarkTime(m.remarksUpdated)) + '</small>' : '') + '</div>'
+                    : '') +
+                '<div class="mc-chips">' +
+                    MEMBER_CHIPS.map(function(t) {
+                        return '<button onclick="saveMemberRemark(' + m.row + ', \'' + escAttr(t) + '\')">' + t + '</button>';
+                    }).join('') +
+                '</div>' +
+                '<div class="mc-remark-edit">' +
+                    '<input type="text" id="mri_' + m.row + '" maxlength="300" value="' + escAttr(m.remarks) + '" placeholder="Add remark (e.g. Notified, will come Day 2)" ' +
+                        'onkeypress="if(event.key===\'Enter\') saveMemberRemark(' + m.row + ')">' +
+                    '<button id="mrb_' + m.row + '" onclick="saveMemberRemark(' + m.row + ')">Save</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function saveMemberRemark(row, preset) {
+        var m = membersData.members.filter(function(x) { return x.row === row; })[0];
+        if (!m) return;
+        var input = document.getElementById('mri_' + row);
+        var btn = document.getElementById('mrb_' + row);
+        var text = (preset !== undefined) ? preset : (input ? input.value : '');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+        jsonpRequest(
+            { action: 'setMemberRemark', row: String(row), phone: m.phone, remark: text },
+            function(result) {
+                if (result.status === 'success') {
+                    m.remarks = result.remarks;
+                    m.remarksUpdated = result.remarksUpdated;
+                    renderMembers();
+                } else {
+                    if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+                    alert('Could not save remark: ' + (result.message || 'Unknown error'));
+                }
+            },
+            function() {
+                if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+                alert('Connection error. Remark was not saved.');
+            }
+        );
+    }
+</script>
+
+</body>
+</html>
