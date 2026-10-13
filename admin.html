@@ -1108,6 +1108,7 @@
         <input type="search" class="msearch" id="membersSearch" placeholder="Search member by name or phone..." oninput="onMembersSearch(this.value)">
         <div class="mfilters" id="membersFilters"></div>
         <div style="text-align:right; margin-bottom:8px;">
+            <span style="float:left; font-size:12px; color:#888; line-height:30px;">📝 Remarks are saved separately for each day</span>
             <button onclick="loadMembersStatus()" style="padding:6px 14px; background:#667eea; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">🔄 Refresh</button>
         </div>
         <div class="members-list" id="membersList"></div>
@@ -2659,7 +2660,7 @@
         if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
 
         jsonpRequest(
-            { action: 'setMemberRemark', row: String(row), phone: m.phone, remark: text },
+            { action: 'setMemberRemark', row: String(row), phone: m.phone, remark: text, date: membersData.date },
             function(result) {
                 if (result.status === 'success') {
                     m.remarks = result.remarks;
