@@ -88,8 +88,8 @@ const CONFIG = {
     // DEFAULT_COUNTRY_CODE added automatically.
     //
     HELP_ENABLED: 1,
-    HELP_CALL_NUMBER: '888 548 7780',
-    HELP_WHATSAPP_NUMBER: '888 548 7780',
+    HELP_CALL_NUMBER: '630 224 3482',
+    HELP_WHATSAPP_NUMBER: '888 674 4460',
     HELP_WHATSAPP_MESSAGE: 'Hello, I need help with the Agomoni bhog registration.',
 
     // ──────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ const CONFIG = {
     // PROD  → 'BHOG'   (coupons look like BHOG-XXXX)
     // NON_PROD → 'TEST' (coupons look like TEST-XXXX)
     //
-    COUPON_PREFIX: 'TEST',
+    COUPON_PREFIX: 'BHOG',
 
     // ──────────────────────────────────────────────────────────
     // Registration Settings
