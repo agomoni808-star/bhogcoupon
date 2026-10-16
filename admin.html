@@ -1945,12 +1945,20 @@
         var cc = String(CONFIG.DEFAULT_COUNTRY_CODE || '91').replace(/\D/g, '');
         var waNum = phoneDigits.length === 10 ? cc + phoneDigits : phoneDigits;
         if (!waNum) return '';
-        var first = (d.name || '').split(' ')[0] || 'there';
-        var dayTxt = (getDayLabel(d.date) ? getDayLabel(d.date) + ' · ' : '') +
+        var fullName = String(d.name || '').replace(/\s+/g, ' ').trim() || 'Devotee';
+        var dayTxt = (getDayLabel(d.date) ? getDayLabel(d.date) + ', ' : '') +
             new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
         var couponUrl = appBaseUrl() + '/coupon.html?code=' + encodeURIComponent(d.couponCode);
-        var msg = 'Namaskar ' + first + ' 🙏\nYour Agomoni Durga Puja bhog coupon for ' + dayTxt + ' is confirmed: ' +
-            d.couponCode + ' (' + d.plates + ' plate(s)).\nPlease show it at the counter: ' + couponUrl + '\nJoy Ma Durga! 🪷';
+        var timeTxt = CONFIG.DISTRIBUTION_TIME || '1 PM to 2 PM';
+        var locUrl = CONFIG.LOCATION_URL || 'https://tinyurl.com/agomonihyderabad';
+        // Plain text only: no emojis or special symbols, so WhatsApp always displays it correctly
+        var msg = 'Namaskar ' + fullName + ',\n' +
+            'Your Agomoni Durga Puja bhog coupon for ' + dayTxt + ' is confirmed.\n' +
+            'Coupon code: ' + d.couponCode + ' (' + d.plates + ' plate(s))\n' +
+            'Time: ' + timeTxt + '\n' +
+            'Please show this coupon at the counter: ' + couponUrl + '\n' +
+            'Follow this link for the location: ' + locUrl + '\n' +
+            'Joy Ma Durga!';
         return 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(msg);
     }
 
@@ -2401,13 +2409,13 @@
         var days = data.days || [];
 
         // Compute totals
-        var totRegistered = 0, totWalkins = 0, totCoupons = 0, totRedeemed = 0, totPending = 0;
+        var totRegistered = 0, totWalkins = 0, totCoupons = 0, totCouponsRedeemed = 0, totCouponsNotRedeemed = 0;
         days.forEach(function(day) {
             totRegistered += (day.registered || 0);
             totWalkins += (day.walkins || 0);
             totCoupons += (day.totalCoupons || 0);
-            totRedeemed += (day.redeemed || 0);
-            totPending += (day.pending || 0);
+            totCouponsRedeemed += (day.couponsRedeemed || 0);
+            totCouponsNotRedeemed += (day.couponsNotRedeemed || 0);
         });
 
         var html = '';
@@ -2422,8 +2430,9 @@
         html += summaryCardHtml('sc-blue', today.registered || 0, 'Registered (Online)');
         html += summaryCardHtml('sc-purple', today.walkins || 0, 'Walk-ins');
         html += summaryCardHtml('sc-teal', today.totalCoupons || 0, 'Total Coupons');
-        html += summaryCardHtml('sc-green', today.redeemed || 0, 'Redeemed');
-        html += summaryCardHtml('sc-orange', today.pending || 0, 'Pending');
+        html += summaryCardHtml('sc-green', today.couponsRedeemed || 0, 'Coupons Redeemed');
+        html += summaryCardHtml('sc-orange', today.couponsNotRedeemed || 0, 'Coupons Not Redeemed');
+        html += summaryCardHtml('sc-blue', (today.redeemed || 0) + ' / ' + (today.totalRegistrations || 0), 'People Redeemed');
         var hasLimit = today.maxTokens > 0;
         html += summaryCardHtml('sc-red',
             hasLimit ? (today.remaining !== undefined ? today.remaining : Math.max(0, today.maxTokens - (today.totalCoupons || 0))) : '∞',
@@ -2437,7 +2446,7 @@
         html += '<table class="summary-table">';
         html += '<thead><tr>' +
             '<th>Day</th><th>Date</th><th>Registered</th><th>Walk-ins</th>' +
-            '<th>Total Coupons</th><th>Redeemed</th><th>Pending</th><th>Limit</th>' +
+            '<th>Total Coupons</th><th>Coupons Redeemed</th><th>Not Redeemed</th><th>Limit</th>' +
             '</tr></thead>';
         html += '<tbody>';
 
@@ -2452,8 +2461,8 @@
                 '<td>' + (day.registered || 0) + '</td>' +
                 '<td>' + (day.walkins || 0) + '</td>' +
                 '<td>' + (day.totalCoupons || 0) + '</td>' +
-                '<td>' + (day.redeemed || 0) + '</td>' +
-                '<td>' + (day.pending || 0) + '</td>' +
+                '<td><strong>' + (day.couponsRedeemed || 0) + '</strong></td>' +
+                '<td>' + (day.couponsNotRedeemed || 0) + '</td>' +
                 '<td>' + (day.maxTokens > 0 ? day.maxTokens : '∞') + '</td>' +
                 '</tr>';
         });
@@ -2464,8 +2473,8 @@
             '<td>' + totRegistered + '</td>' +
             '<td>' + totWalkins + '</td>' +
             '<td>' + totCoupons + '</td>' +
-            '<td>' + totRedeemed + '</td>' +
-            '<td>' + totPending + '</td>' +
+            '<td>' + totCouponsRedeemed + '</td>' +
+            '<td>' + totCouponsNotRedeemed + '</td>' +
             '<td>—</td>' +
             '</tr>';
 
